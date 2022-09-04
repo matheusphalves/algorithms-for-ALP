@@ -42,4 +42,6 @@ class Aircraft:
         self.penality_cost_earliest = data['penality_cost_earliest']
         self.penality_cost_latest = data['penality_cost_latest']
         self.landing_time = None
+        self.penality_cost_computed = None
+        self.probability_of_choose = 0
 

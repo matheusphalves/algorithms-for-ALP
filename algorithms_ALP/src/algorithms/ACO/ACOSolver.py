@@ -37,7 +37,7 @@ class ACOSolver:
     """
 
     def __init__(self, runaway_number, number_of_ants, evaporation_rate, pheromone_intensity,
-                 beta_evaporation_rate, alpha=1, beta1=1, beta2=1):
+                 beta_evaporation_rate, alpha=1, beta = 1, beta1=1, beta2=1):
         """
         :param runaway_number: amount of runways available
         :param number_of_ants: amount of Ants to build solutions
@@ -45,6 +45,7 @@ class ACOSolver:
         :param pheromone_intensity: constant added to the best path
         :param beta_evaporation_rate: rate at which beta decays (optional)
         :param alpha: weighting of pheromone
+        :param beta: weighting of heuristic (visibility of ants)
         :param beta1: weighting of heuristic (priority)
         :param beta2: weighting of heuristic (cost penality)
         """
@@ -56,6 +57,7 @@ class ACOSolver:
         self.pheromone_rate = pheromone_intensity
         self.beta_evaporation_rate = beta_evaporation_rate
         self.alpha = alpha
+        self.beta = beta
         self.beta1 = beta1
         self.beta2 = beta2
         self.separation_times_matrix = None
@@ -65,6 +67,7 @@ class ACOSolver:
         self.global_aircraft_candidates = []
         self.global_runaway_list = []
         self.pheromone_matrix = None
+        self.heuristic_info = None
 
     def __initialize(self, alp_instance: ALPInstance = None):
         """
@@ -74,26 +77,29 @@ class ACOSolver:
         """
 
         try:
+            # Create pheromony matrix (considering runaways and dummy nodes)
+            matrix_dimension = self.runaway_number + len(
+                alp_instance.aircraft_times) + 2  # (2) Dummy nodes called D and F
+            self.pheromone_matrix, runaway_indices, aircraft_indices = self.create_matrix_list(matrix_dimension, len(alp_instance.aircraft_times))
+
             self.global_runaway_list = [
-                Runaway(run_index, runaway_name=f'R{run_index}') for run_index in range(self.runaway_number)
+                Runaway(run_index, runaway_name=f'R{int(run_index)}') for run_index in runaway_indices
             ]
             # Create global aircraft candidate list with index
             self.global_aircraft_candidates = [
-                Aircraft(int(index_plane), airplane_data) for index_plane, airplane_data in
+                Aircraft(int(aircraft_indices[int(index_plane)]), airplane_data) for index_plane, airplane_data in
                 alp_instance.aircraft_times.items()
             ]
 
             # Start colony with initial data (there are not any solution)
             self.colony = [
-                Ant(ant_id=ant_id, plane_candidates_list=self.global_aircraft_candidates,
+                Ant(ant_id=ant_id, aircraft_candidates_list=self.global_aircraft_candidates,
                     runaways_list=self.global_runaway_list)
                 for ant_id in range(self.number_of_ants)
             ]
 
-            # Create pheromony matrix (considering runaways and dummy nodes)
-            matrix_dimension = self.runaway_number + len(
-                alp_instance.aircraft_times) + 2  # (2) Dummy nodes called D and F
-            self.pheromone_matrix = self.create_matrix_list(matrix_dimension, len(alp_instance.aircraft_times))
+            # Create heuristic info matrix
+            self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
 
             # Load separation times matrix
             self.separation_times_matrix = alp_instance.separation_times_matrix
@@ -136,6 +142,8 @@ class ACOSolver:
         aux_list = [0]
         aux_list = MathUtils.join_lists(aux_list, [1] * self.runaway_number)
         aux_list = MathUtils.join_lists(aux_list, [0] * (planes_size + 1))
+        runaway_indices = [i for i, x in enumerate(aux_list) if x == 1]
+        aircraft_indices = [i for i, x in enumerate(aux_list) if x == 0][1:-1]
         matrix.append(aux_list)
 
         # Create connections between runaways and aircrafts
@@ -160,7 +168,7 @@ class ACOSolver:
         assert np_matrix.shape[0] == np_matrix.shape[1] and np_matrix.shape[
             0] == matrix_dimension, "Matrix dimensions wrong!"
 
-        return np_matrix
+        return np_matrix, runaway_indices, aircraft_indices
 
     def select_runaway(self, ant: Ant):
         """
@@ -189,23 +197,52 @@ class ACOSolver:
 
         return r0
 
-    def select_aircraft(self, ant: Ant, selected_runaway: Runaway):
-        print(f"Ant with id {ant.ant_id} selected runaway {selected_runaway.runaway_name}")
-        pass
+    def select_aircraft(self, ant: Ant, runaway: Runaway):
+        """
+        After choosing a runway r, the ant has to choose an aircraft for this runway.
+        :param ant: 
+        :param runaway: 
+        :return: 
+        """
+        print(f"Ant with id {ant.ant_id} selected runaway {runaway.runaway_name}")
+        for aircraft in ant.aircraft_candidates_list:
+            aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
+            aircraft.penality_cost_computed = self.evaluate_cost(aircraft)
+            self.compute_heuristic_info(runaway, aircraft)
+            aircraft.probability_of_choose = self.compute_probability(runaway, aircraft)
 
-    def evaluate_selected_aircraft(self, ant: Ant, runaway_selected: Runaway):
+        return max(ant.aircraft_candidates_list, lambda x: x.probability_of_choose)
+
+    def evaluate_cost(self, aircraft: Aircraft):
         """
-        After choosing a runway r, the ant has to select an aircraft to land on this runway.
+        Apply the objective function from problem formulation to collect all deviation costs from each aircraft.
         :param ant:
-        :param runaway_selected:
-        :return: Aircraft
         """
-        print(f"Ant with id {ant.ant_id} selected runaway {runaway_selected.runaway_name}")
-        # for aircraft in ant.aircraft_candidates_list:
-        #
-        #     priority = self.select_priority_rule(aircraft_index=aircraft.index, sel=1)
-        #     penality_cost = self.calculate_penality_cost(aircraft)
-        return 1
+        deviation_time = aircraft.landing_time - aircraft.target_landing_time
+        if deviation_time > 0:
+            return aircraft.penality_cost_latest * deviation_time
+
+        return aircraft.penality_cost_earliest * abs(deviation_time)
+
+    def compute_probability(self, runaway: Runaway, aircraft: Aircraft):
+        """
+        Evaluate the probability rule to choose an aircraft to landing on selected runaway.
+        :param aircraft:
+        :param runaway:
+        :param ant:
+        """
+
+        try:
+            #todo check if candidate list contains aircraft j!!!!!
+            numerator = (self.pheromone_matrix[runaway.index][aircraft.index]**self.alpha) * self.heuristic_info[runaway.index][aircraft.index]**self.beta
+            #adjust to consider only rows with (r, j) -> runaway and aircrafts
+            denominator = np.sum(np.dot(self.pheromone_matrix, self.heuristic_info))
+            return numerator / denominator
+        except Exception as ex:
+            pass
+
+        return 0
+
 
     def assign_landing_time_to_aircraft(self, ant: Ant, selected_runaway: Runaway, selected_aircraft: Aircraft):
         """
@@ -225,9 +262,13 @@ class ACOSolver:
 
             separation_time = self.separation_times_matrix[landed_aircraft.index][selected_aircraft.index]
             aux_aicraft_times.append(landed_aircraft.earliest_landing_time + separation_time)
-        aircraft_times.append(max(aux_aicraft_times))
+        if len(aux_aicraft_times) > 0:
+            aircraft_times.append(max(aux_aicraft_times))
 
         return max(aircraft_times)
+
+
+    #----- Future works
 
     def update_pheromone_trail(self):
         """
@@ -254,15 +295,16 @@ class ACOSolver:
         else:
             return aircraft.latest_landing_time
 
-    def calculate_penality_cost(self, aircraft_selected: Aircraft):
+    def compute_heuristic_info(self, runaway: Runaway, aircraft: Aircraft):
         """
-        This cost is calculated after we assign a landing time to the aircraft
-        :param aircraft_selected:
+        A weighting of these two parameters (Priority(i) and penalty_cost(i)) corresponds to the heuristic information.
+        :param runaway:
+        :param aircraft:
         :return: float
         """
-        priority = self.get_aircraft_priority(aircraft_selected.index, sel=1)
-        cost_penality = None
-        return (1 / (priority + 1))**self.beta1 * \
+        priority = self.get_aircraft_priority(aircraft.index, sel=1)
+        cost_penality = aircraft.penality_cost_computed
+        self.heuristic_info[runaway.index][aircraft.index] = (1 / (priority + 1))**self.beta1 * \
                (1 / (cost_penality + 1))**self.beta2 # avoid division by zero
 
 

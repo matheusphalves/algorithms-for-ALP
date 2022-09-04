@@ -40,7 +40,7 @@ class ALPInstance:
                 'appearance_time': aircraft_row['appearance_time'],
                 'earliest_landing_time': aircraft_row['earliest_landing_time'],
                 'target_landing_time': aircraft_row['target_landing_time'],
-                'latest_landing_time': aircraft_row['penality_cost_latest'],
+                'latest_landing_time': aircraft_row['latest_landing_time'],
                 'penality_cost_earliest': aircraft_row['penality_cost_latest'],
                 'penality_cost_latest': aircraft_row['penality_cost_latest']
             }
