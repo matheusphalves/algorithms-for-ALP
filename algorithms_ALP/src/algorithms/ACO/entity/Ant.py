@@ -28,16 +28,15 @@ class Ant:
         Represents an Ant applied to ALP.
     """
 
-    def __init__(self, ant_id, aircraft_candidates_list, runaways_list):
+    def __init__(self, aircraft_candidates_dict, runaways_dict):
         """
         :param plane_candidates_list: A candidate list according to the ant constructs its solution
-        :param runaways_list: lists representing each a runway: it contains both the
+        :param runaways_dict: lists representing each a runway: it contains both the
             indexes of aircrafts affected to and their landing times
         :param penality_cost: Penalty cost of the solution represented
         """
-        self.ant_id = ant_id
-        self.aircraft_candidates_list = aircraft_candidates_list
-        self.runaways_list = runaways_list # also called as solution_list
+        self.aircraft_candidates_dict = aircraft_candidates_dict
+        self.runaways_dict = runaways_dict # also called as solution_dict
         self.penality_cost = None
 
     """
