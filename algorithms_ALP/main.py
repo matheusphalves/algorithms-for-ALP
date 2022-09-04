@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     aco_solver = ACOSolver(
         runaway_number = 2,
-        number_of_ants = 2,
+        number_of_ants = 3,
         evaporation_rate = 1,
         pheromone_intensity = 1,
         beta_evaporation_rate = 1)

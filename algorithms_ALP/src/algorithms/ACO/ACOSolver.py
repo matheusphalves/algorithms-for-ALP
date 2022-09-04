@@ -24,11 +24,13 @@ from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
 from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
 from algorithms_ALP.src.algorithms.ACO.entity.Runaway import Runaway
+from algorithms_ALP.src.exceptions.OperationErrorException import OperationErrorException
 from algorithms_ALP.src.utils.math.MathUtils import MathUtils
 
 import numpy as np
 import random
 from datetime import datetime
+import operator
 
 
 class ACOSolver:
@@ -37,7 +39,7 @@ class ACOSolver:
     """
 
     def __init__(self, runaway_number, number_of_ants, evaporation_rate, pheromone_intensity,
-                 beta_evaporation_rate, alpha=1, beta = 1, beta1=1, beta2=1):
+                 beta_evaporation_rate, alpha=1, beta=1, beta1=1, beta2=1):
         """
         :param runaway_number: amount of runways available
         :param number_of_ants: amount of Ants to build solutions
@@ -71,6 +73,9 @@ class ACOSolver:
         self.runaway_indices = []
         self.aircraft_indices = []
 
+        # Response attributes
+        self.best_scheduling_path = {}
+
     def __initialize(self, alp_instance: ALPInstance = None):
         """
         Initialize internal parameters of ACO.
@@ -87,18 +92,17 @@ class ACOSolver:
 
             # Create global runaway list
             for run_index in self.runaway_indices:
-                self.global_runaway_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}')
+                self.global_runaway_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
+                                                              solution_dict={})
 
             # Create global aircraft candidate list with index
             for index_plane, airplane_data in alp_instance.aircraft_times.items():
                 aux_index_plane = self.aircraft_indices[int(index_plane)]
-                self.global_aircraft_candidates[aux_index_plane] = Aircraft(int(aux_index_plane), airplane_data)
+                self.global_aircraft_candidates[aux_index_plane] = Aircraft(aircraft_id=int(index_plane), index=int(aux_index_plane), data=airplane_data)
 
             # Start colony with initial data (there are not any solution)
             for ant_id in range(self.number_of_ants):
-                self.colony.append(Ant(ant_id=ant_id,
-                                       aircraft_candidates_dict=self.global_aircraft_candidates,
-                                       runaways_dict=self.global_runaway_dict))
+                self.colony.append(Ant(alp_instance, self.runaway_indices, self.aircraft_indices))
 
             # Create heuristic info matrix
             self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
@@ -108,7 +112,7 @@ class ACOSolver:
 
 
         except Exception as ex:
-            raise ex
+            raise OperationErrorException(f"Error during initialization step: \n {str(ex)}")
 
     def start(self, alp_intance: ALPInstance, max_iterations=10):
         self.__initialize(alp_intance)
@@ -116,13 +120,18 @@ class ACOSolver:
         for iteration in range(max_iterations):
             iter_start = datetime.now()
             print(f"Starting iteration {int(iteration + 1)} / {max_iterations} expected")
+            iter_ants_costs = {}
             for ant in self.colony:
                 while len(ant.aircraft_candidates_dict) > 0:
-                    selected_runaway = self.select_runaway(ant)
-                    selected_aircraft = self.select_aircraft(ant, selected_runaway)
-                    landing_time = self.assign_landing_time_to_aircraft(ant, selected_runaway, selected_aircraft)
+                    selected_runaway: Runaway = self.select_runaway(ant)
+                    selected_aircraft = self.select_aircraft(ant, selected_runaway) # the landing time is assigned here as well
                     # Insert the aircraft j in the list of aircraft affected to the runway r and delete it from the candidate list
+                    ant.aircraft_candidates_dict.pop(selected_aircraft.index)
+                    ant_runaway: Runaway = ant.runaways_dict[selected_runaway.index]
+                    ant_runaway.solution_dict[selected_aircraft.index] = selected_aircraft
                 # Return to the beginning of the graph
+                ant.compute_total_costs()
+            self.best_scheduling_path = min(self.colony, key=lambda ant: ant.solution_cost).runaways_dict
             self.update_pheromone_trail()
 
             iter_finish = datetime.now()
@@ -130,6 +139,9 @@ class ACOSolver:
 
         global_finish = datetime.now()
         print(f"Finish iteration [{int(iteration)}]: Elapsed {global_finish - global_start} seconds")
+
+    def reset_ants(self):
+        pass
 
     def create_matrix_list(self, matrix_dimension, planes_size):
         """
@@ -177,25 +189,29 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 5  # 0< q0 < 1 is a constant of the algorithm
-        q = random.randint(0, 1)
-        r0 = random.choice(self.global_runaway_dict)
+        q0 = 1  # 0< q0 < 1 is a constant of the algorithm
+        q = random.uniform(0, 1)
+        r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]
         if q < q0:
             runaway_cal_list = []
             for key, runaway in ant.runaways_dict.items():
-                if len(runaway.solution_list) > 0:
-                    last_plane = runaway.solution_list[-1]  # last aircraft affected to the runway r for the ant
+                if len(runaway.solution_dict) > 0:
+                    last_plane = runaway.solution_dict[list(runaway.solution_dict.keys())[-1]]  # last aircraft affected to the runway r for the ant
                     last_time_plus_sep_time_list = []
-                    for candidate_index in ant.aircraft_candidates_dict:
+                    for key, candidate_aircraft in ant.aircraft_candidates_dict.items():
                         # Separation time between the landings of aircraft i and j if they land on the same runaway
-                        separation_time = self.separation_times_matrix[last_plane.index][candidate_index]
+                        separation_time = self.separation_times_matrix[last_plane.aircraft_id][candidate_aircraft.aircraft_id]
                         last_time_plus_sep_time_list.append(last_plane.landing_time + separation_time)
 
-                    runaway_cal_list.append(min(last_time_plus_sep_time_list))
+                    runaway_cal_list.append({'runaway_index': runaway.index, 'time': min(last_time_plus_sep_time_list)})
                 else:
                     return r0
 
-            return min(runaway_cal_list)
+            better_runaway = runaway_cal_list[0]
+            for runaway_aux in runaway_cal_list:
+                if runaway_aux['time'] < better_runaway['time']:
+                    better_runaway = runaway_aux
+            return ant.runaways_dict[better_runaway['runaway_index']]
 
         return r0
 
@@ -206,14 +222,21 @@ class ACOSolver:
         :param runaway: 
         :return: 
         """
+        better_aircraft: Aircraft = None
         for key, aircraft in ant.aircraft_candidates_dict.items():
             aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
             aircraft.penality_cost_computed = self.evaluate_cost(aircraft)
             self.compute_heuristic_info(runaway, aircraft)
-            aircraft.probability_of_choose = self.compute_probability(runaway, aircraft)
+            aircraft.probability_of_choose = self.compute_probability(ant, runaway, aircraft)
 
-        return max(ant.aircraft_candidates_dict, lambda x: x.probability_of_choose)
+            if better_aircraft is None:
+                better_aircraft = aircraft
+            elif aircraft.probability_of_choose > better_aircraft.probability_of_choose:
+                better_aircraft = aircraft
 
+
+        # return max(ant.aircraft_candidates_dict, lambda x: x.probability_of_choose)
+        return better_aircraft
     def evaluate_cost(self, aircraft: Aircraft):
         """
         Apply the objective function from problem formulation to collect all deviation costs from each aircraft.
@@ -225,7 +248,7 @@ class ACOSolver:
 
         return aircraft.penality_cost_earliest * abs(deviation_time)
 
-    def compute_probability(self, runaway: Runaway, aircraft: Aircraft):
+    def compute_probability(self, ant: Ant, runaway: Runaway, aircraft: Aircraft):
         """
         Evaluate the probability rule to choose an aircraft to landing on selected runaway.
         :param aircraft:
@@ -236,15 +259,10 @@ class ACOSolver:
         try:
             #todo check if candidate list contains aircraft j!!!!!
             numerator = (self.pheromone_matrix[runaway.index][aircraft.index]**self.alpha) * self.heuristic_info[runaway.index][aircraft.index]**self.beta
-            denominator = np.sum(np.dot(self.pheromone_matrix**self.alpha, self.heuristic_info**self.beta))
-            np.sum(self.pheromone_matrix[
-                                        self.runaway_indices[0]:self.runaway_indices[-1]+1,
-                                        self.aircraft_indices[0]:self.aircraft_indices[-1] + 1,
-                                        ],
-                                        self.heuristic_info[
-                                        self.runaway_indices[0]:self.runaway_indices[-1]+1,
-                                        self.aircraft_indices[0]:self.aircraft_indices[-1] + 1,
-                                        ])
+            denominator = 1
+            for key, aircraft_unvisited in ant.aircraft_candidates_dict.items():
+                if aircraft.index != aircraft_unvisited.index:
+                    denominator += self.pheromone_matrix[runaway.index][aircraft_unvisited.index]*self.heuristic_info[runaway.index][aircraft_unvisited.index]
 
             return numerator / denominator
         except Exception as ex:
@@ -266,11 +284,11 @@ class ACOSolver:
         runaway_solutions = ant.runaways_dict[selected_runaway.index]
         aircraft_times = [selected_aircraft.target_landing_time]
         aux_aicraft_times = []
-        for landed_air in runaway_solutions.solution_list: # return Runaway list
+        for key, landed_air in runaway_solutions.solution_dict.items(): # return Runaway list
             landed_aircraft: Aircraft = landed_air
 
-            separation_time = self.separation_times_matrix[landed_aircraft.index][selected_aircraft.index]
-            aux_aicraft_times.append(landed_aircraft.earliest_landing_time + separation_time)
+            separation_time = self.separation_times_matrix[landed_aircraft.aircraft_id][selected_aircraft.aircraft_id]
+            aux_aicraft_times.append(landed_aircraft.landing_time + separation_time)
         if len(aux_aicraft_times) > 0:
             aircraft_times.append(max(aux_aicraft_times))
 
@@ -303,6 +321,9 @@ class ACOSolver:
             return aircraft.target_landing_time
         else:
             return aircraft.latest_landing_time
+
+    def choose_best_path(self):
+        pass
 
     def compute_heuristic_info(self, runaway: Runaway, aircraft: Aircraft):
         """

@@ -1,4 +1,3 @@
-#  """
 #  MIT License
 #
 #  Copyright (c) 2022 Matheus Phelipe Alves Pinto
@@ -20,12 +19,11 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
-#  """
 
 
 class Aircraft:
 
-    def __init__(self, index, data):
+    def __init__(self, aircraft_id, index, data):
         """
         :param appearance_time:
         :param earliest_landing_time:
@@ -34,6 +32,7 @@ class Aircraft:
         :param penality_cost_earliest:
         :param penality_cost_latest:
         """
+        self.aircraft_id = aircraft_id
         self.index = index
         self.appearance_time = data['appearance_time']
         self.earliest_landing_time = data['earliest_landing_time']

@@ -1,4 +1,3 @@
-#  """
 #  MIT License
 #
 #  Copyright (c) 2022 Matheus Phelipe Alves Pinto
@@ -20,7 +19,10 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
-#  """
+
+from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
+from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
+from algorithms_ALP.src.algorithms.ACO.entity.Runaway import Runaway
 
 
 class Ant:
@@ -28,21 +30,35 @@ class Ant:
         Represents an Ant applied to ALP.
     """
 
-    def __init__(self, aircraft_candidates_dict, runaways_dict):
+    def __init__(self, alp_instance, runaway_indices, aircraft_indices):
         """
         :param plane_candidates_list: A candidate list according to the ant constructs its solution
         :param runaways_dict: lists representing each a runway: it contains both the
             indexes of aircrafts affected to and their landing times
         :param penality_cost: Penalty cost of the solution represented
         """
-        self.aircraft_candidates_dict = aircraft_candidates_dict
-        self.runaways_dict = runaways_dict # also called as solution_dict
-        self.penality_cost = None
+        self.solution_cost = 0
+        self.aircraft_candidates_dict = {}
+        self.runaways_dict = {} # also called as solution_dict
+        self.initialize_parameters(alp_instance, runaway_indices, aircraft_indices)
 
-    """
-    Example of an Ant (runaway list)
-    runaway_name    airplane_index:landing_time
-    Runway 1        1:125 5:201 4:56 –
-    Runway 2        2:108 3:184 6:300 8:655
-    Runway 3        7:54 10:407 9:520 –
-    """
+
+    def initialize_parameters(self, alp_instance: ALPInstance, runaway_indices, aircraft_indices):
+        # Create global runaway list
+        for run_index in runaway_indices:
+            self.runaways_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
+                                                          solution_dict={})
+
+        # Create global aircraft candidate list with index
+        for index_plane, airplane_data in alp_instance.aircraft_times.items():
+            aux_index_plane = aircraft_indices[int(index_plane)]
+            self.aircraft_candidates_dict[aux_index_plane] = Aircraft(aircraft_id=int(index_plane),
+                                                                        index=int(aux_index_plane), data=airplane_data)
+
+    def compute_total_costs(self):
+        solution_cost = 0
+        for key, runaway in self.runaways_dict.items():
+            runaway.compute_landing_costs()
+            solution_cost += runaway.runaway_cost
+        self.solution_cost = solution_cost # avoid multiple sums
+        return self.solution_cost
