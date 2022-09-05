@@ -1,4 +1,3 @@
-#  """
 #  MIT License
 #
 #  Copyright (c) 2022 Matheus Phelipe Alves Pinto
@@ -20,7 +19,6 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
-#  """
 
 import numpy as np
 import random
@@ -56,8 +54,8 @@ class MathUtils:
         return stuffs
 
     @staticmethod
-    def matrix_list_to_np_array(matrix: list):
-        return np.array(matrix)
+    def matrix_list_to_np_array(matrix: list, dtype=float):
+        return np.array(matrix, dtype=dtype)
 
     @staticmethod
     def join_lists_to_np_array(data_list: list):
