@@ -64,3 +64,15 @@ class MathUtils:
     @staticmethod
     def join_lists(list_a, list_b):
         return list_a + list_b
+
+
+    @staticmethod
+    def choice_from_probability(elements_list, prob_distribution):
+        """
+        The solution is to normalize the probabilities by dividing them by their sum if the sum is close enough to 1.
+        :param elements_list:
+        :param prob_distribution:
+        :return:
+        """
+        normalized_prob = prob_distribution / np.sum(prob_distribution)
+        return np.random.choice(elements_list, p=normalized_prob)
