@@ -151,7 +151,7 @@ class ACOSolver:
         Provides a battalion of ants to build the solutions.
         :param alp_instance:
         """
-        # Start colony with initial data (there are not any solution)
+        # Start colony with blank data (alzheimer's crisys)
         self.colony.clear()
         for ant_id in range(self.number_of_ants):
             self.colony.append(Ant(alp_instance, self.runaway_indices, self.aircraft_indices))
@@ -237,18 +237,17 @@ class ACOSolver:
         :param runaway: 
         :return: 
         """
-        better_aircraft: Aircraft = None
+        prob_list = []
         for key, aircraft in ant.aircraft_candidates_dict.items():
             aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
             aircraft.penality_cost_computed = self.evaluate_cost(aircraft)
             self.compute_heuristic_info(runaway, aircraft)
             aircraft.probability_of_choose = self.compute_probability(ant, runaway, aircraft)
+            prob_list.append(aircraft.probability_of_choose)
 
-            if better_aircraft is None:
-                better_aircraft = aircraft
-            elif aircraft.probability_of_choose > better_aircraft.probability_of_choose:
-                better_aircraft = aircraft
-        return better_aircraft
+        aircraft_index = MathUtils.choice_from_probability(np.array(list(ant.aircraft_candidates_dict.keys())),
+                                                           prob_distribution=np.array(prob_list))
+        return ant.aircraft_candidates_dict[aircraft_index]
 
     def evaluate_cost(self, aircraft: Aircraft):
         """
@@ -330,7 +329,8 @@ class ACOSolver:
                     penality_cost_iter = self.glorious_ant.solution_cost
                     delta_pheromone = Q / (penality_cost_iter + 1)
 
-                self.pheromone_matrix[runaway_index, aircraft_index] = self.pheromone_matrix[runaway_index, aircraft_index] * \
+                self.pheromone_matrix[runaway_index, aircraft_index] = self.pheromone_matrix[
+                                                                           runaway_index, aircraft_index] * \
                                                                        self.evaporation_rate + delta_pheromone
 
     def solution_contains_node(self, runaway_index, aircraft_index):
@@ -362,4 +362,4 @@ class ACOSolver:
         cost_penality = aircraft.penality_cost_computed
         self.heuristic_info[runaway.index][aircraft.index] = (1 / (priority + 1)) ** self.beta1 * \
                                                              (1 / (
-                                                                         cost_penality + 1)) ** self.beta2  # avoid division by zero
+                                                                     cost_penality + 1)) ** self.beta2  # avoid division by zero
