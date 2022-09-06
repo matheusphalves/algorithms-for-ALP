@@ -22,7 +22,7 @@
 
 class ALPResult:
     """
-    Stores the result of an algorithm execution.
+    Stores the results of an algorithm execution.
     """
 
     def __init__(self, algorithm_name, execution_time, custom_data):
