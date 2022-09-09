@@ -19,6 +19,7 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
+from collections import OrderedDict
 
 from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
@@ -48,7 +49,7 @@ class Ant:
         # Create global runaway list
         for run_index in runaway_indices:
             self.runaways_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
-                                                    solution_dict={})
+                                                    solution_dict=OrderedDict())
 
         # Create global aircraft candidate list with index
         for index_plane, airplane_data in alp_instance.aircraft_times.items():
