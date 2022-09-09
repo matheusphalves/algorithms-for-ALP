@@ -41,13 +41,13 @@ class ACOSolver:
     Ant Colony Optimization for Aircraft Landing Problem.
     """
 
-    def __init__(self, runaway_number, number_of_ants, evaporation_rate, pheromone_intensity,
+    def __init__(self, runaway_number, number_of_ants, evaporation_rate, pheromony_rate,
                  alpha=1, beta=0.7, beta1=1, beta2=1):
         """
         :param runaway_number: amount of runways available
         :param number_of_ants: amount of Ants to build solutions
         :param evaporation_rate: rate at which pheromone evaporates
-        :param pheromone_intensity: constant added to the best path
+        :param pheromony_rate: constant added to the best path
         :param alpha: weighting of pheromone
         :param beta: weighting of heuristic (visibility of ants)
         :param beta1: weighting of heuristic (priority)
@@ -58,7 +58,7 @@ class ACOSolver:
         self.runaway_number = runaway_number
         self.number_of_ants = number_of_ants
         self.evaporation_rate = evaporation_rate
-        self.pheromone_rate = pheromone_intensity
+        self.pheromone_rate = pheromony_rate
         self.alpha = alpha
         self.beta = beta
         self.beta1 = beta1
@@ -76,8 +76,8 @@ class ACOSolver:
         self.pheromone_matrix_history = {}  # save the pheromone matrix evolution
 
         # Response attributes
-        self.local_glorious_ant: Ant = None # Represents the best Ant from a Iteration
-        self.global_glorious_ant: Ant = None # Represents the best Ant during all iterations
+        self.local_glorious_ant: Ant = None  # Represents the best Ant from a Iteration
+        self.global_glorious_ant: Ant = None  # Represents the best Ant during all iterations
 
     def __initialize(self, alp_instance: ALPInstance = None):
         """
@@ -91,7 +91,7 @@ class ACOSolver:
             matrix_dimension = self.runaway_number + len(
                 alp_instance.aircraft_times) + 2  # (2) Dummy nodes called D and F
             self.pheromone_matrix, self.runaway_indices, self.aircraft_indices = self.create_matrix_list(
-                matrix_dimension, len(alp_instance.aircraft_times))
+                matrix_dimension, len(alp_instance.aircraft_times), 0.1)
 
             # Create global runaway list
             for run_index in self.runaway_indices:
@@ -163,7 +163,7 @@ class ACOSolver:
         for ant_id in range(self.number_of_ants):
             self.colony.append(Ant(alp_instance, self.runaway_indices, self.aircraft_indices))
 
-    def create_matrix_list(self, matrix_dimension, planes_size):
+    def create_matrix_list(self, matrix_dimension, planes_size, start_pheromone):
         """
         Create the adjacency matrix that represents Graph's path for ALP.
         :param matrix_dimension: square dimension (containing dummy nodes)
@@ -174,9 +174,9 @@ class ACOSolver:
 
         # Create connections between dummy node D and runways
         aux_list = [0]
-        aux_list = MathUtils.join_lists(aux_list, [1] * self.runaway_number)
+        aux_list = MathUtils.join_lists(aux_list, [start_pheromone] * self.runaway_number)
         aux_list = MathUtils.join_lists(aux_list, [0] * (planes_size + 1))
-        runaway_indices = [i for i, x in enumerate(aux_list) if x == 1]
+        runaway_indices = [i for i, x in enumerate(aux_list) if x != 0]
         aircraft_indices = [i for i, x in enumerate(aux_list) if x == 0][1:-1]
         matrix.append(aux_list)
 
@@ -184,7 +184,7 @@ class ACOSolver:
         for runaway in range(self.runaway_number):
             aux_list = [0]
             aux_list = MathUtils.join_lists(aux_list, [0] * self.runaway_number)
-            aux_list = MathUtils.join_lists(aux_list, [1] * planes_size)
+            aux_list = MathUtils.join_lists(aux_list, [start_pheromone] * planes_size)
             aux_list.append(0)
             matrix.append(aux_list)
 
@@ -195,7 +195,7 @@ class ACOSolver:
             aux_list.append(1)
             matrix.append(aux_list)
         # Create connection between nodes F and D
-        aux_list = [1]
+        aux_list = [start_pheromone]
         matrix.append(MathUtils.join_lists(aux_list, [0] * (matrix_dimension - 1)))
 
         np_matrix = MathUtils.matrix_list_to_np_array(matrix)
@@ -209,7 +209,7 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 0.9  # 0< q0 < 1 is a constant of the algorithm
+        q0 = 0.2  # 0< q0 < 1 is a constant of the algorithm
         q = random.uniform(0, 1)
         r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]
         if q < q0:
@@ -319,6 +319,26 @@ class ACOSolver:
 
         return max(aircraft_times)
 
+    # def update_pheromone_trail(self, iter_number):
+    #     """
+    #     The pheromone trail must be updated at the end of each iteration.
+    #     :return:
+    #     """
+    #
+    #     self.pheromone_matrix_history[str(iter_number)] = np.array(self.pheromone_matrix)
+    #
+    #     for index, (run_index, runaway) in enumerate(self.local_glorious_ant.runaways_dict.items()):
+    #         for air_index, (aicraft_index, aircraft) in enumerate(runaway.solution_dict.items()):
+    #             delta_pheromone = 0
+    #             pheromone_weight = self.compute_pheromone_weight(air_index)
+    #             # todo: formigas devem obedecer a mesma sequência? ÓBVIO
+    #             if self.ant_contains_node(self.local_glorious_ant, run_index, aircraft.index):
+    #                 penality_cost_iter = self.local_glorious_ant.solution_cost
+    #                 delta_pheromone = (self.pheromone_rate / (penality_cost_iter + 1)) * pheromone_weight
+    #             self.pheromone_matrix[run_index, aicraft_index] += self.pheromone_matrix[
+    #                                                                    run_index, aicraft_index] * self.evaporation_rate + delta_pheromone * self.pheromone_rate
+    #     x = 0
+
     def update_pheromone_trail(self, iter_number):
         """
         The pheromone trail must be updated at the end of each iteration.
@@ -327,21 +347,52 @@ class ACOSolver:
 
         self.pheromone_matrix_history[str(iter_number)] = np.array(self.pheromone_matrix)
 
-        for index, (run_index, runaway) in enumerate(self.local_glorious_ant.runaways_dict.items()):
-            for air_index, (aicraft_index, aircraft) in enumerate(runaway.solution_dict.items()):
-                delta_pheromone = 0
-                pheromone_weight = self.compute_pheromone_weight(air_index)
-                # todo: formigas devem obedecer a mesma sequência?
-                if self.ant_contains_node(self.local_glorious_ant, run_index, aircraft.index):
-                    Q = 10
-                    penality_cost_iter = self.local_glorious_ant.solution_cost
-                    delta_pheromone = (Q / (penality_cost_iter + 1)) * pheromone_weight
-                self.pheromone_matrix[run_index, aicraft_index] += self.pheromone_matrix[
-                                                                      run_index, aicraft_index] * self.evaporation_rate + delta_pheromone * self.pheromone_rate
-        x = 0
+        for ant in self.colony:
+            for runaway_index in self.runaway_indices:
+                optimal_scheduler_sequence = [key for key, runaway in self.local_glorious_ant.runaways_dict[runaway_index].solution_dict.items()]
+                current_schedule_sequence = [key for key, runaway in ant.runaways_dict[runaway_index].solution_dict.items()]
+
+                optimal_sub_list = [optimal_scheduler_sequence[n:n + 2] for n in range(0, len(optimal_scheduler_sequence), 1)]
+                current_sub_list = [current_schedule_sequence[n:n + 2] for n in range(0, len(current_schedule_sequence), 1)]
+
+                optimal_sub_list = optimal_sub_list[:len(optimal_sub_list) -1]
+                current_sub_list = current_sub_list[:len(current_sub_list) - 1]
+
+                for node in optimal_sub_list:
+                    if node in current_sub_list:
+                        #atualizar feromonio do node
+                        valuable = self.compute_pheromone_weight(node[0])
+                        penality_cost_iter = self.local_glorious_ant.solution_cost
+                        delta_pheromone = (1 / (penality_cost_iter + 1))
+                        # self.pheromone_matrix[runaway_index, aicraft_index] += self.pheromone_matrix[
+                        #                                                    run_index, aicraft_index] * self.evaporation_rate + delta_pheromone * self.pheromone_rate
+                        self.pheromone_matrix[runaway_index, node[0]] += (1-self.evaporation_rate) * self.pheromone_matrix[
+                                                                           runaway_index, node[0]]  + delta_pheromone * self.pheromone_rate * valuable
+                        self.pheromone_matrix[node[0], node[1]] += self.evaporation_rate * self.pheromone_matrix[node[0], node[1]] + delta_pheromone * self.pheromone_rate
+                        pass
+
+                x=0
+
+            # dado o best_scheduled_sequences, aumentar feromonio se formiga fez caminho (i,j) pertencente a best_scheduled_sequences
+
+            # self.ant_contains_node()
+        pass
+
+        # for index, (run_index, runaway) in enumerate(self.local_glorious_ant.runaways_dict.items()):
+        #     for air_index, (aicraft_index, aircraft) in enumerate(runaway.solution_dict.items()):
+        #         delta_pheromone = 0
+        #         pheromone_weight = self.compute_pheromone_weight(air_index)
+        #         schedule_sequence = [key for key, runaway_info in runaway.solution_dict.keys()]
+        #         for ant in self.colony:
+        #             if self.ant_contains_node(ant, run_index, aircraft.index):
+        #                 penality_cost_iter = self.local_glorious_ant.solution_cost
+        #                 delta_pheromone = (self.pheromone_rate / (penality_cost_iter + 1)) * pheromone_weight
+        #             self.pheromone_matrix[run_index, aicraft_index] += self.pheromone_matrix[
+        #                                                                   run_index, aicraft_index] * self.evaporation_rate + delta_pheromone * self.pheromone_rate
+        # x = 0
 
     def compute_pheromone_weight(self, x):
-        return 1 / math.sqrt(x + 1)
+        return 10 / math.sqrt(x + 1)
 
     def ant_contains_node(self, ant: Ant, runaway_index, aircraft_index):
         try:
@@ -368,10 +419,11 @@ class ACOSolver:
         :param aircraft:
         :return: float
         """
-        priority = self.get_aircraft_priority(aircraft.index, sel=3)
+        priority = self.get_aircraft_priority(aircraft.index, sel=1)
         cost_penality = aircraft.penality_cost_computed
         self.heuristic_info[runaway.index][aircraft.index] = (1 / (priority + 1)) ** self.beta1 * \
-                                                             (1 / (cost_penality + 1)) ** self.beta2  # avoid division by zero
+                                                             (1 / (
+                                                                     cost_penality + 1)) ** self.beta2  # avoid division by zero
 
     # def plot_results(self):
     #     """
@@ -402,4 +454,3 @@ class ACOSolver:
             self.global_glorious_ant = self.local_glorious_ant
         elif self.local_glorious_ant.solution_cost < self.global_glorious_ant.solution_cost:
             self.global_glorious_ant = self.local_glorious_ant
-

@@ -23,6 +23,7 @@
 from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
 from algorithms_ALP.src.algorithms.ACO.entity.Runaway import Runaway
+from algorithms_ALP.src.utils.math.MathUtils import MathUtils
 
 
 class Ant:
@@ -39,26 +40,26 @@ class Ant:
         """
         self.solution_cost = 0
         self.aircraft_candidates_dict = {}
-        self.runaways_dict = {} # also called as solution_dict
+        self.runaways_dict = {}  # also called as solution_dict
+        self.path_matrix = None
         self.initialize_parameters(alp_instance, runaway_indices, aircraft_indices)
-
 
     def initialize_parameters(self, alp_instance: ALPInstance, runaway_indices, aircraft_indices):
         # Create global runaway list
         for run_index in runaway_indices:
             self.runaways_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
-                                                          solution_dict={})
+                                                    solution_dict={})
 
         # Create global aircraft candidate list with index
         for index_plane, airplane_data in alp_instance.aircraft_times.items():
             aux_index_plane = aircraft_indices[int(index_plane)]
             self.aircraft_candidates_dict[aux_index_plane] = Aircraft(aircraft_id=int(index_plane),
-                                                                        index=int(aux_index_plane), data=airplane_data)
+                                                                      index=int(aux_index_plane), data=airplane_data)
 
     def compute_total_costs(self):
         solution_cost = 0
         for key, runaway in self.runaways_dict.items():
             runaway.compute_landing_costs()
             solution_cost += runaway.runaway_cost
-        self.solution_cost = solution_cost # avoid multiple sums
+        self.solution_cost = solution_cost  # avoid multiple sums
         return self.solution_cost
