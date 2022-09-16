@@ -74,5 +74,6 @@ class MathUtils:
         :param prob_distribution:
         :return:
         """
+        prob_distribution = prob_distribution.clip(min=0)
         normalized_prob = prob_distribution / np.sum(prob_distribution)
         return np.random.choice(elements_list, p=normalized_prob)

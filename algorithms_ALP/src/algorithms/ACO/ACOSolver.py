@@ -91,7 +91,7 @@ class ACOSolver:
             matrix_dimension = self.runaway_number + len(
                 alp_instance.aircraft_times) + 2  # (2) Dummy nodes called D and F
             self.pheromone_matrix, self.runaway_indices, self.aircraft_indices = self.create_matrix_list(
-                matrix_dimension, len(alp_instance.aircraft_times), 0.1)
+                matrix_dimension, len(alp_instance.aircraft_times), 1)
 
             # Create global runaway list
             for run_index in self.runaway_indices:
@@ -117,8 +117,8 @@ class ACOSolver:
         except Exception as ex:
             raise OperationErrorException(f"Error during initialization step: \n {str(ex)}")
 
-    def start(self, alp_intance: ALPInstance, max_iterations=100):
-        self.__initialize(alp_intance)
+    def start(self, alp_instance: ALPInstance, max_iterations=100):
+        self.__initialize(alp_instance)
         global_start = datetime.now()
         for iteration in range(max_iterations):
             iter_start = datetime.now()
@@ -136,13 +136,16 @@ class ACOSolver:
                     ant_runaway.solution_dict[selected_aircraft.index] = selected_aircraft
                 # Return to the beginning of the graph
                 ant.compute_total_costs()
-                # print(f"Ant cost: {ant.solution_cost}")
+                print(f"Ant cost: {ant.solution_cost}")
             # self.local_glorious_ant = min(self.colony, key=lambda ant: ant.solution_cost)
             self.store_results()
+            # Create heuristic info matrix
+            matrix_dimension =  self.runaway_number + len(alp_instance.aircraft_times) + 2
+            self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
 
             print(f"Iteration cost: {self.local_glorious_ant.solution_cost}")
             self.update_pheromone_trail(iteration)
-            self.release_the_krants(alp_intance)
+            self.release_the_krants(alp_instance)
 
             iter_finish = datetime.now()
             print(f"Finish iteration [{int(iteration + 1)}]: Elapsed {iter_finish - iter_start} seconds")
@@ -245,14 +248,17 @@ class ACOSolver:
         """
         prob_list = []
         for key, aircraft in ant.aircraft_candidates_dict.items():
-            aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
-            aircraft.penality_cost_computed = self.evaluate_cost(aircraft)
-            aircraft.probability_of_choose = self.compute_probability(ant, runaway, aircraft)
-            prob_list.append(aircraft.probability_of_choose)
-            self.compute_heuristic_info(runaway, aircraft)
+            if len(ant.aircraft_candidates_dict.items()) > 1:
+                aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
+                aircraft.penality_cost_computed = self.evaluate_cost(aircraft)
+                aircraft.probability_of_choose = self.compute_probability(ant, runaway, aircraft)
+                prob_list.append(aircraft.probability_of_choose)
+                self.compute_heuristic_info(runaway, aircraft)
+            else:
+                return ant.aircraft_candidates_dict[aircraft.index]
 
         aircraft_index = MathUtils.choice_from_probability(np.array(list(ant.aircraft_candidates_dict.keys())),
-                                                           prob_distribution=np.array(prob_list))
+                                                               prob_distribution=np.array(prob_list))
         return ant.aircraft_candidates_dict[aircraft_index]
 
     def evaluate_cost(self, aircraft: Aircraft):
@@ -277,14 +283,13 @@ class ACOSolver:
 
         try:
             try:
-                ant.aircraft_candidates_dict[aircraft.index]
                 numerator = (self.pheromone_matrix[runaway.index][aircraft.index] ** self.alpha) * \
                             self.heuristic_info[runaway.index][aircraft.index] ** self.beta
-                denominator = 1
+                denominator = 0
                 for key, aircraft_unvisited in ant.aircraft_candidates_dict.items():
                     if aircraft.index != aircraft_unvisited.index:
-                        denominator += self.pheromone_matrix[runaway.index][aircraft_unvisited.index] * \
-                                       self.heuristic_info[runaway.index][aircraft_unvisited.index]
+                        denominator += self.pheromone_matrix[runaway.index][aircraft_unvisited.index]**self.alpha * \
+                                       self.heuristic_info[runaway.index][aircraft_unvisited.index]**self.beta
 
                 return numerator / denominator
 
@@ -359,7 +364,10 @@ class ACOSolver:
                                                                             runaway_index, aircraft_index] * self.evaporation_rate
 
     def increase_pheromone(self, runaway_index, aircraft_index, delta_pheromone):
-        self.pheromone_matrix[runaway_index, aircraft_index] += delta_pheromone + self.pheromone_rate
+        if delta_pheromone > 0:
+            self.pheromone_matrix[runaway_index, aircraft_index] += delta_pheromone * self.pheromone_rate
+        else:
+            self.pheromone_matrix[runaway_index, aircraft_index] +=0
 
 
 #    def compute_pheromone_weight(self, x):

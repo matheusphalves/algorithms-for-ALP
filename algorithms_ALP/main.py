@@ -11,7 +11,7 @@ if __name__ == '__main__':
     alp.build_ALP_instance()
 
     aco_solver = ACOSolver(
-        runaway_number=1,                                       # runaway_number: amount of runways available
+        runaway_number=3,                                       # runaway_number: amount of runways available
         number_of_ants=100,                                     # number_of_ants: amount of Ants to build solutions
         evaporation_rate=0.9,                                  # evaporation_rate: rate at which pheromone evaporates
         pheromone_rate=1.2,                                      # pheromone_intensity: constant added to the best path
@@ -19,7 +19,7 @@ if __name__ == '__main__':
         beta=1.6,                                                 # beta: weighting of heuristic (visibility of ants)
         beta1=7,                                                # beta1: weighting of heuristic (priority)
         beta2=0.4)                                                # beta2: weighting of heuristic (cost penality)
-    aco_solver.start(alp_intance=alp, max_iterations=100)
+    aco_solver.start(alp_instance=alp, max_iterations=100)
     x = 0
 
     # alp_parser = ALPParser()
