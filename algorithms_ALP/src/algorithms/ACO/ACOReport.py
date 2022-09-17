@@ -20,12 +20,39 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
+from algorithms_ALP.src.utils.handlers.DataFrameHandler import DataFrameHandler
+import datetime
 
 
-class AbstractReportGenerator:
-    def __init__(self, ant:Ant):
+class ACOReport:
+    def __init__(self, ant: Ant):
         self.ant = ant
         self.report_dict = {}
 
-    def generate_report(self, file_name):
-        pass
+    def save_runaway_report(self, runaway_dict, file_name, file_path=None):
+        try:
+            df = DataFrameHandler.dict_to_df(runaway_dict)
+            DataFrameHandler.save_df_to_csv(df, file_name=file_name, file_path=file_path)
+        except Exception as ex:
+            print(f"Failed on save report... \n{str(ex)}")
+
+    def generate_report(self):
+        print(f"Generating report. {len(self.ant.runaways_dict)} runaways was detected in this solution.")
+
+        for run_index, (runaway_index, runaway) in enumerate(self.ant.runaways_dict.items()):
+            execution_date = datetime.datetime.now().strftime('%d_%m_%Y__%H_%M')
+            runaway_dict = {}
+            for air_index, (aircraft_index, aircraft) in enumerate(runaway.solution_dict.items()):
+                runaway_dict[str(air_index + 1)] = {
+                    'id': aircraft.index - 2,
+                    # 'appearance_time': aircraft.appearance_time,
+                    'Ei': aircraft.earliest_landing_time,
+                    'xi': aircraft.landing_time,
+                    'Tai': aircraft.target_landing_time,
+                    'Li': aircraft.latest_landing_time,
+                    # 'Ci-': aircraft.penality_cost_earliest,
+                    # 'Ci+': aircraft.penality_cost_latest,
+                    'COST': aircraft.penality_cost_computed
+                }
+            self.save_runaway_report(runaway_dict=runaway_dict, file_name=f'R{run_index + 1}_{execution_date}')
+        print(f"Report generated.")
