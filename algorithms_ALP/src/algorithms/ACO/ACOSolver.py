@@ -78,6 +78,7 @@ class ACOSolver:
         # Response attributes
         self.local_glorious_ant: Ant = None  # Represents the best Ant from a Iteration
         self.global_glorious_ant: Ant = None  # Represents the best Ant during all iterations
+        self.iterations_costs = []
 
     def __initialize(self, alp_instance: ALPInstance = None):
         """
@@ -123,7 +124,6 @@ class ACOSolver:
         for iteration in range(max_iterations):
             iter_start = datetime.now()
             print(f"Starting iteration {int(iteration + 1)} / {max_iterations} expected")
-            iter_ants_costs = {}
             for ant in self.colony:
                 while len(ant.aircraft_candidates_dict) > 0:
                     selected_runaway: Runaway = self.select_runaway(ant)
@@ -136,15 +136,15 @@ class ACOSolver:
                     ant_runaway.solution_dict[selected_aircraft.index] = selected_aircraft
                 # Return to the beginning of the graph
                 ant.compute_total_costs()
-                print(f"Ant cost: {ant.solution_cost}")
+                #print(f"Ant cost: {ant.solution_cost}")
             # self.local_glorious_ant = min(self.colony, key=lambda ant: ant.solution_cost)
             self.store_results()
             # Create heuristic info matrix
-            matrix_dimension =  self.runaway_number + len(alp_instance.aircraft_times) + 2
+            matrix_dimension = self.runaway_number + len(alp_instance.aircraft_times) + 2
             self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
 
             print(f"Iteration cost: {self.local_glorious_ant.solution_cost}")
-            self.update_pheromone_trail(iteration)
+            self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.iterations_costs[-1])
             self.release_the_krants(alp_instance)
 
             iter_finish = datetime.now()
@@ -254,8 +254,10 @@ class ACOSolver:
                 aircraft.probability_of_choose = self.compute_probability(ant, runaway, aircraft)
                 prob_list.append(aircraft.probability_of_choose)
                 self.compute_heuristic_info(runaway, aircraft)
+
             else:
                 return ant.aircraft_candidates_dict[aircraft.index]
+
 
         aircraft_index = MathUtils.choice_from_probability(np.array(list(ant.aircraft_candidates_dict.keys())),
                                                                prob_distribution=np.array(prob_list))
@@ -353,8 +355,12 @@ class ACOSolver:
                 #print(
                 #    f"R{runaway_index} -> Formigas que escolheram aviao {aircraft_index} na posicao {air_index}: {spot_counter}")
                 penality_cost_iter = self.local_glorious_ant.solution_cost
-                delta_pheromone = (1 / (penality_cost_iter + 1)) * path_weight * (1-self.pheromone_rate)
-                self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone)
+                delta_pheromone = (1 / (penality_cost_iter + 1)) * path_weight * self.pheromone_rate
+                if best_solution:
+                    self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone*2)
+                else:
+                    self.increase_pheromone(runaway_index, aircraft_index, 0)
+
 
 
     def evaporate_pheromone(self):
@@ -412,28 +418,6 @@ class ACOSolver:
                                                              (1 / (
                                                                      cost_penality + 1)) ** self.beta2  # avoid division by zero
 
-    # def plot_results(self):
-    #     """
-    #     Plots the score over time after the model has been fitted.
-    #     :return: None if the model isn't fitted yet
-    #     """
-    #     if not self.fitted:
-    #         print("Ant Colony Optimizer not fitted!  There exists nothing to plot.")
-    #         return None
-    #     else:
-    #         fig, ax = plt.subplots(figsize=(20, 15))
-    #         ax.plot(self.best_series, label="Best Run")
-    #         ax.set_xlabel("Iteration")
-    #         ax.set_ylabel("Performance")
-    #         ax.text(.8, .6,
-    #                 'Ants: {}\nEvap Rate: {}\nIntensify: {}\nAlpha: {}\nBeta: {}\nBeta Evap: {}\nChoose Best: {}\n\nFit Time: {}m{}'.format(
-    #                     self.colony, self.evaporation_rate, self.pheromone_intensification, self.heuristic_alpha,
-    #                     self.heuristic_beta, self.beta_evaporation_rate, self.choose_best, self.fit_time // 60,
-    #                     ["\nStopped Early!" if self.stopped_early else ""][0]),
-    #                 bbox={'facecolor': 'gray', 'alpha': 0.8, 'pad': 10}, transform=ax.transAxes)
-    #         ax.legend()
-    #         plt.title("Ant Colony Optimization Results (best: {})".format(np.round(self.best, 2)))
-    #         plt.show()
 
     def store_results(self):
         self.local_glorious_ant = min(self.colony, key=lambda ant: ant.solution_cost)
@@ -441,3 +425,5 @@ class ACOSolver:
             self.global_glorious_ant = self.local_glorious_ant
         elif self.local_glorious_ant.solution_cost < self.global_glorious_ant.solution_cost:
             self.global_glorious_ant = self.local_glorious_ant
+
+        self.iterations_costs.append(self.local_glorious_ant.solution_cost)

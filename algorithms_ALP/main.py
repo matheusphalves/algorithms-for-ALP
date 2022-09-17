@@ -3,22 +3,29 @@ from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.utils.handlers.DataFrameHandler import DataFrameHandler
 
 if __name__ == '__main__':
-    #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
+    df = DataFrameHandler.read_csv_data('C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
     #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland9_1662311765839387800.csv')
     #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
-    df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland2_1662311765618525300.csv')
+    #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland2_1662311765618525300.csv')
+    # 44 avioes
+    #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland7_1662311765728457300.csv')
+    # 10 avioes (data base 500)
+    #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland_fake.csv')
+
+
+
     alp = ALPInstance(df)
     alp.build_ALP_instance()
 
     aco_solver = ACOSolver(
-        runaway_number=3,                                       # runaway_number: amount of runways available
-        number_of_ants=100,                                     # number_of_ants: amount of Ants to build solutions
+        runaway_number=1,                                       # runaway_number: amount of runways available
+        number_of_ants=200,                                     # number_of_ants: amount of Ants to build solutions
         evaporation_rate=0.9,                                  # evaporation_rate: rate at which pheromone evaporates
         pheromone_rate=1.2,                                      # pheromone_intensity: constant added to the best path
-        alpha=3,                                                # alpha: weighting of pheromone
+        alpha=5,                                                # alpha: weighting of pheromone
         beta=1.6,                                                 # beta: weighting of heuristic (visibility of ants)
         beta1=7,                                                # beta1: weighting of heuristic (priority)
-        beta2=0.4)                                                # beta2: weighting of heuristic (cost penality)
+        beta2=1)                                                # beta2: weighting of heuristic (cost penality)
     aco_solver.start(alp_instance=alp, max_iterations=100)
     x = 0
 
