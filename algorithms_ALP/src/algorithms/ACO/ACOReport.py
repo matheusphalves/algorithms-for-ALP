@@ -19,17 +19,13 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
+from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
 
-from algorithms_ALP.src.utils.results.ALPResult import ALPResult
 
+class AbstractReportGenerator:
+    def __init__(self, ant:Ant):
+        self.ant = ant
+        self.report_dict = {}
 
-class ReportGenerator:
-    """
-    Process the data generated from optimization algorithms. Use this class to uniformize and compare the results between differents algorithms.
-    """
-
-    def __init__(self, alp_results):
-        self.alp_results = alp_results
-
-    def save_results(self):
+    def generate_report(self, file_name):
         pass
