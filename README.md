@@ -9,16 +9,24 @@ This repository contain all code used to handle with Aircraft Landing Problem.
 The parser extracts information from Aircraft Landing Problem dataset from 
 [check here](http://people.brunel.ac.uk/~mastjjb/jeb/orlib/airlandinfo.html). 
 
-## Algorithms
+## Solvers
 
-### Populational Meta-heuristics Approach
+- ACOSolver
+- GASolver
 
-- Ant Colony Optmization
+## Meta-heuristics approaches 
+
+### Constructive
+
+- Ant Colony Optimization
+
+### Populational
+
 - Genetic Algorithm
 
-### Exact Approach
+### Single Solution
 
-- First-Comes-First-Served
+- Tabu Search
 
 ## References
 
