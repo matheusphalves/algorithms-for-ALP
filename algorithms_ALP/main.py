@@ -1,12 +1,13 @@
+from algorithms_ALP.src.algorithms.ACO.ACOGraphViewer import ACOGraphViewer
 from algorithms_ALP.src.algorithms.ACO.ACOReport import ACOReport
 from algorithms_ALP.src.algorithms.ACO.ACOSolver import ACOSolver
 from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.utils.handlers.DataFrameHandler import DataFrameHandler
 
 if __name__ == '__main__':
-    df = DataFrameHandler.read_csv_data('C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
+    #df = DataFrameHandler.read_csv_data('C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
     #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland9_1662311765839387800.csv')
-    #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
+    df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland_1662239820256920500.csv')
     #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland2_1662311765618525300.csv')
     # 44 avioes
     #df = DataFrameHandler.read_csv_data('C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\tmp\\airland7_1662311765728457300.csv')
@@ -28,9 +29,11 @@ if __name__ == '__main__':
         beta1=7,                                                # beta1: weighting of heuristic (priority)
         beta2=1)                                                # beta2: weighting of heuristic (cost penality)
     aco_solver.start(alp_instance=alp, max_iterations=1)
+    #aco_report = ACOReport(aco_solver.local_glorious_ant)
+    #aco_report.generate_report()
+    aco_graph = ACOGraphViewer()
+    aco_graph.visualize_best_solution(aco_solver.local_glorious_ant)
     x = 0
-    aco_report = ACOReport(aco_solver.local_glorious_ant)
-    aco_report.generate_report()
     # alp_parser = ALPParser()
     # alp_parser.parse_content('D:\\testing\\airland1.txt')
 

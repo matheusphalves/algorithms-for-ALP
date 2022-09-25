@@ -19,10 +19,25 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
+from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
 from algorithms_ALP.src.utils.math.GraphViewer import GraphViewer
 
 
-class ACOGraphViewer(GraphViewer):
+class ACOGraphViewer:
 
     def __init__(self):
-        pass
+        self.graphs = []
+
+    def visualize_best_solution(self, glorious_ant: Ant):
+        for run_index, (runaway_index, runaway) in enumerate(glorious_ant.runaways_dict.items()):
+            aco_graph = GraphViewer()
+            solution_list = [aircraft_index for air_index, (aircraft_index, aircraft) in enumerate(runaway.solution_dict.items())]
+            grouped_sol_list = [solution_list[n:n + 2] for n in range(0, len(solution_list), 1)][:-1]
+            aco_graph.add_weigthed_edge(f'R{run_index + 1}', f'A{grouped_sol_list[0][0]}', 0)
+            for node in grouped_sol_list:
+                aco_graph.add_weigthed_edge(f'A{node[0]}', f'A{node[1]}', 0)
+
+            self.graphs.append(aco_graph)
+
+        for graph in self.graphs:
+            graph.visualize_digraph()
