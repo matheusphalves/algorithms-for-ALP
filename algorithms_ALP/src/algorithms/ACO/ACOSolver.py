@@ -121,9 +121,10 @@ class ACOSolver:
     def start(self, alp_instance: ALPInstance, max_iterations=100):
         self.__initialize(alp_instance)
         global_start = datetime.now()
+        stop_iteration = 1
         for iteration in range(max_iterations):
-            iter_start = datetime.now()
-            print(f"Starting iteration {int(iteration + 1)} / {max_iterations} expected")
+            #iter_start = datetime.now()
+            #print(f"Processing iteration {int(iteration + 1)} / {max_iterations} expected")
             for ant in self.colony:
                 while len(ant.aircraft_candidates_dict) > 0:
                     selected_runaway: Runaway = self.select_runaway(ant)
@@ -143,15 +144,17 @@ class ACOSolver:
             matrix_dimension = self.runaway_number + len(alp_instance.aircraft_times) + 2
             self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
 
-            print(f"Iteration cost: {self.local_glorious_ant.solution_cost}")
+            #print(f"Iteration cost: {self.local_glorious_ant.solution_cost}")
             self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.iterations_costs[-1])
             self.release_the_krants(alp_instance)
 
             iter_finish = datetime.now()
-            print(f"Finish iteration [{int(iteration + 1)}]: Elapsed {iter_finish - iter_start} seconds")
+            stop_iteration =iteration
+            #print(f"Finish iteration [{int(iteration + 1)}]: Elapsed {iter_finish - iter_start} seconds")
 
         global_finish = datetime.now()
-        print(f"Finishing algorithm execution: Elapsed {global_finish - global_start} seconds")
+        #print(f"Finishing algorithm execution: ETA {global_finish - global_start} seconds")
+        #print(f"Solution was given using {stop_iteration + 1} / {max_iterations} iterations")
         print(f"Last Cost solution: {self.local_glorious_ant.solution_cost}")
         print(f"Best solution: {self.global_glorious_ant.solution_cost}")
         x = 0
@@ -350,6 +353,8 @@ class ACOSolver:
                         if air_index == selected_spot:
                             spot_counter += 1
                             computed_delta += 1 / (ant.solution_cost + 1)
+                        else:
+                            break
                     except Exception as ex:
                         pass
                 #print(
