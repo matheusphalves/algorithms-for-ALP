@@ -36,7 +36,7 @@ class ACOReport:
         except Exception as ex:
             print(f"Failed on save report... \n{str(ex)}")
 
-    def generate_report(self):
+    def generate_report(self, cycle_number=0, custom_label=''):
         print(f"Generating report. {len(self.ant.runaways_dict)} runaways was detected in this solution.")
 
         for run_index, (runaway_index, runaway) in enumerate(self.ant.runaways_dict.items()):
@@ -54,5 +54,5 @@ class ACOReport:
                     # 'Ci+': aircraft.penality_cost_latest,
                     'COST': aircraft.penality_cost_computed
                 }
-            self.save_runaway_report(runaway_dict=runaway_dict, file_name=f'R{run_index + 1}_{execution_date}')
+            self.save_runaway_report(runaway_dict=runaway_dict, file_name=f'Cycle_{cycle_number}_{custom_label}_Planes{len(runaway.solution_dict.items())}_R{run_index + 1}_{execution_date}')
         print(f"Report generated.")

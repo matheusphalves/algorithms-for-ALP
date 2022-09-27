@@ -153,8 +153,8 @@ class ACOSolver:
             #print(f"Finish iteration [{int(iteration + 1)}]: Elapsed {iter_finish - iter_start} seconds")
 
         global_finish = datetime.now()
-        #print(f"Finishing algorithm execution: ETA {global_finish - global_start} seconds")
-        #print(f"Solution was given using {stop_iteration + 1} / {max_iterations} iterations")
+        print(f"Finishing algorithm execution: ETA {global_finish - global_start} seconds")
+        print(f"Solution was given using {stop_iteration + 1} / {max_iterations} iterations")
         print(f"Last Cost solution: {self.local_glorious_ant.solution_cost}")
         print(f"Best solution: {self.global_glorious_ant.solution_cost}")
         x = 0
