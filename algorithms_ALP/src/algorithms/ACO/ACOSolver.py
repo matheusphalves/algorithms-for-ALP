@@ -144,7 +144,7 @@ class ACOSolver:
             matrix_dimension = self.runaway_number + len(alp_instance.aircraft_times) + 2
             self.heuristic_info = np.ones((matrix_dimension, matrix_dimension))
 
-            #print(f"Iteration cost: {self.local_glorious_ant.solution_cost}")
+            print(f"{iteration + 1}Iteration cost: {self.local_glorious_ant.solution_cost}")
             self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.iterations_costs[-1])
             self.release_the_krants(alp_instance)
 
@@ -242,6 +242,9 @@ class ACOSolver:
 
         return r0
 
+    def bench_time(self, method_name, time):
+        print(f"{method_name} time: {time}")
+
     def select_aircraft(self, ant: Ant, runaway: Runaway):
         """
         After choosing a runway r, the ant has to choose an aircraft for this runway.
@@ -250,6 +253,7 @@ class ACOSolver:
         :return: 
         """
         prob_list = []
+        #global_start = datetime.now()
         for key, aircraft in ant.aircraft_candidates_dict.items():
             if len(ant.aircraft_candidates_dict.items()) > 1:
                 aircraft.landing_time = self.assign_landing_time_to_aircraft(ant, runaway, aircraft)
@@ -261,10 +265,8 @@ class ACOSolver:
             else:
                 return ant.aircraft_candidates_dict[aircraft.index]
 
-
-        aircraft_index = MathUtils.choice_from_probability(np.array(list(ant.aircraft_candidates_dict.keys())),
-                                                               prob_distribution=np.array(prob_list))
-        return ant.aircraft_candidates_dict[aircraft_index]
+        return ant.aircraft_candidates_dict[MathUtils.choice_from_probability(np.array(list(ant.aircraft_candidates_dict.keys())),
+                                                               prob_distribution=np.array(prob_list))]
 
     def evaluate_cost(self, aircraft: Aircraft):
         """
@@ -285,7 +287,6 @@ class ACOSolver:
         :param runaway:
         :param ant:
         """
-
         try:
             try:
                 numerator = (self.pheromone_matrix[runaway.index][aircraft.index] ** self.alpha) * \
@@ -337,26 +338,27 @@ class ACOSolver:
 
         self.pheromone_matrix_history[str(iter_number)] = np.array(self.pheromone_matrix)
         self.evaporate_pheromone()
+        global_start = datetime.now()
         for index, (runaway_index, runaway) in enumerate(self.local_glorious_ant.runaways_dict.items()):
             optimal_scheduled_sequence = [key for key, runaway in
                                           self.local_glorious_ant.runaways_dict[runaway_index].solution_dict.items()]
 
             for air_index, aircraft_index in enumerate(optimal_scheduled_sequence):
                 path_weight = self.compute_pheromone_weight(air_index)  # importância da ordem
-                spot_counter = 0
-                computed_delta = 0
-                for ant in self.colony:
-                    ant_scheduled_sequence = [key for key, runaway in
-                                              ant.runaways_dict[runaway_index].solution_dict.items()]
-                    try:
-                        selected_spot = ant_scheduled_sequence.index(aircraft_index)
-                        if air_index == selected_spot:
-                            spot_counter += 1
-                            computed_delta += 1 / (ant.solution_cost + 1)
-                        else:
-                            break
-                    except Exception as ex:
-                        pass
+                #spot_counter = 0
+                # computed_delta = 0
+                # for ant in self.colony:
+                #     ant_scheduled_sequence = [key for key, runaway in
+                #                               ant.runaways_dict[runaway_index].solution_dict.items()]
+                #     try:
+                #         selected_spot = ant_scheduled_sequence.index(aircraft_index)
+                #         if air_index == selected_spot:
+                #             #spot_counter += 1
+                #             computed_delta += 1 / (ant.solution_cost + 1)
+                #         else:
+                #             pass
+                #     except Exception as ex:
+                #         pass
                 #print(
                 #    f"R{runaway_index} -> Formigas que escolheram aviao {aircraft_index} na posicao {air_index}: {spot_counter}")
                 penality_cost_iter = self.local_glorious_ant.solution_cost
@@ -365,25 +367,21 @@ class ACOSolver:
                     self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone*2)
                 else:
                     self.increase_pheromone(runaway_index, aircraft_index, 0)
+        #self.bench_time("update_pheromone_trail", datetime.now() - global_start)
 
 
 
     def evaporate_pheromone(self):
         for runaway_index in self.runaway_indices:
             for aircraft_index in self.aircraft_indices:
-                self.pheromone_matrix[runaway_index, aircraft_index] = self.pheromone_matrix[
-                                                                            runaway_index, aircraft_index] * self.evaporation_rate
+                self.pheromone_matrix[runaway_index, aircraft_index] = (1 - self.evaporation_rate) * self.pheromone_matrix[
+                                                                            runaway_index, aircraft_index]
 
     def increase_pheromone(self, runaway_index, aircraft_index, delta_pheromone):
         if delta_pheromone > 0:
             self.pheromone_matrix[runaway_index, aircraft_index] += delta_pheromone * self.pheromone_rate
         else:
             self.pheromone_matrix[runaway_index, aircraft_index] +=0
-
-
-#    def compute_pheromone_weight(self, x):
-#        # h(x)=-(sqrt(x)+30)+40
-#        return 1 / math.sqrt(x + 1)
 
     def compute_pheromone_weight(self, x):
         # h(x)=-(sqrt(x)+30)+40
@@ -392,23 +390,38 @@ class ACOSolver:
         V = 30
         return V*math.exp(-x/(R*C))
 
+    # def compute_pheromone_weight(self, x):
+    #     # h(x)=-(sqrt(x)+30)+40
+    #     R = 5
+    #     C = 3.3
+    #     V = 100
+    #     return V*math.exp(-x/(R*C))
+
     def ant_contains_node(self, ant: Ant, runaway_index, aircraft_index):
         try:
             return ant.runaways_dict[runaway_index].solution_dict[aircraft_index] is not None
         except Exception as ex:
             return False
 
-    def get_aircraft_priority(self, aircraft_index, sel=1):
+    def get_aircraft_priority(self, aircraft_index, sel=7):
         aircraft: Aircraft = self.global_aircraft_candidates[aircraft_index]
 
-        if sel == 1:
+        if sel == 1:    #
             return aircraft.appearance_time
-        elif sel == 2:
+        elif sel == 2:  # ei
             return aircraft.earliest_landing_time
-        elif sel == 3:
+        elif sel == 3:  # tai
             return aircraft.target_landing_time
-        else:
+        elif sel == 4:  # li
             return aircraft.latest_landing_time
+        elif sel == 5:   # ei / Pbi
+            return aircraft.earliest_landing_time / aircraft.penality_cost_earliest
+        elif sel == 6:  # li / Pai
+            return aircraft.latest_landing_time / aircraft.penality_cost_latest
+        elif sel == 7:  # tai / (Pbi + Pai) TESTANDO
+            return aircraft.target_landing_time / (aircraft.penality_cost_earliest + aircraft.penality_cost_latest)
+        elif sel == 8:  # li / (Pbi + Pai)
+            return aircraft.latest_landing_time / (aircraft.penality_cost_earliest + aircraft.penality_cost_latest)
 
     def compute_heuristic_info(self, runaway: Runaway, aircraft: Aircraft):
         """
@@ -417,7 +430,7 @@ class ACOSolver:
         :param aircraft:
         :return: float
         """
-        priority = self.get_aircraft_priority(aircraft.index, sel=1)
+        priority = self.get_aircraft_priority(aircraft.index, sel=8)
         cost_penality = aircraft.penality_cost_computed
         self.heuristic_info[runaway.index][aircraft.index] = (1 / (priority + 1)) ** self.beta1 * \
                                                              (1 / (
