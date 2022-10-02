@@ -48,16 +48,16 @@ def load_files(root_path, airland_range = [8,8]):
     return df_data_list
 
 if __name__ == '__main__':
-    # sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
-    sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
+    sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
+    # sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
 
 
-    df_data_list = load_files(sample_data_path, [7, 7])
+    df_data_list = load_files(sample_data_path, [1, 1])
 
 
     counter = 1
     for df in df_data_list:
-        for runaway_number in range(1, 3):
+        for runaway_number in range(1, 4):
             print(f"Solving instance with {len(df)} planes with {runaway_number} runaways available.")
             aco_solver = ACOSolver(
                 # runaway_number=runaway_number,                              # runaway_number: amount of runways available
@@ -69,22 +69,22 @@ if __name__ == '__main__':
                 # beta1=4,                                                    # beta1: weighting of heuristic (priority)
                 # beta2=2)                                                    # beta2: weighting of heuristic (cost penality)
             runaway_number=runaway_number,  # runaway_number: amount of runways available
-            number_of_ants=100,  # number_of_ants: amount of Ants to build solutions
-            evaporation_rate=0.5,  # evaporation_rate: rate at which pheromone evaporates
-            pheromone_rate=1,  # pheromone_intensity: constant added to the best path
+            number_of_ants=int(len(df)*1.2),  # number_of_ants: amount of Ants to build solutions
+            evaporation_rate=0.3,  # evaporation_rate: rate at which pheromone evaporates
+            pheromone_rate=10,  # pheromone_intensity: constant added to the best path
             alpha=1,  # alpha: weighting of pheromone
             beta=1,  # beta: weighting of heuristic (visibility of ants)
-            beta1=5,  # beta1: weighting of heuristic (priority)
-            beta2=4)  # beta2: weighting of heuristic (cost penality)
+            beta1=4,  # beta1: weighting of heuristic (priority)
+            beta2=2)  # beta2: weighting of heuristic (cost penality)
             alp = ALPInstance(df)
             alp.build_ALP_instance()
-            aco_solver.start(alp_instance=alp, max_iterations=100)
+            aco_solver.start(alp_instance=alp, max_iterations=1000)
             # aco_report = ACOReport(aco_solver.local_glorious_ant)
             # aco_report.generate_scheduled_times_report(cycle_number=0, custom_label=f"air{counter}_best_{aco_solver.global_glorious_ant.solution_cost}_time{aco_solver.time_execution.__str__().replace(':', '-')}_")
             counter +=1
 
 
-    # CICLO 1
+    # CICLO 1 - 100 iterações
     # runaway_number = runaway_number,  # runaway_number: amount of runways available
     # number_of_ants = 50,  # number_of_ants: amount of Ants to build solutions
     # evaporation_rate = 0.9,  # evaporation_rate: rate at which pheromone evaporates
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     # beta1 = 4,  # beta1: weighting of heuristic (priority)
     # beta2 = 2)  # beta2: weighting of heuristic (cost penality)
 
-    # CICLO 2
+    # CICLO 2 - 100 iterações
     # runaway_number = runaway_number,  # runaway_number: amount of runways available
     # number_of_ants = 100,  # number_of_ants: amount of Ants to build solutions
     # evaporation_rate = 0.5,  # evaporation_rate: rate at which pheromone evaporates
@@ -103,6 +103,19 @@ if __name__ == '__main__':
     # beta = 1,  # beta: weighting of heuristic (visibility of ants)
     # beta1 = 5,  # beta1: weighting of heuristic (priority)
     # beta2 = 4)  # beta2: weighting of heuristic (cost penality)
+
+    # CICLO 3.1 - 200 ITERAÇÕES
+    # runaway_number = runaway_number,  # runaway_number: amount of runways available
+    # number_of_ants = 150,  # number_of_ants: amount of Ants to build solutions
+    # evaporation_rate = 0.3,  # evaporation_rate: rate at which pheromone evaporates
+    # pheromone_rate = 10,  # pheromone_intensity: constant added to the best path
+    # alpha = 1,  # alpha: weighting of pheromone
+    # beta = 1,  # beta: weighting of heuristic (visibility of ants)
+    # beta1 = 4,  # beta1: weighting of heuristic (priority)
+    # beta2 = 2)  # beta2: weighting of heuristic (cost penality)
+    # alp = ALPInstance(df)
+    # alp.build_ALP_instance()
+    # aco_solver.start(alp_instance=alp, max_iterations=200)
 
     # aco_graph = ACOGraphViewer()
     # aco_graph.visualize_best_solution(aco_solver.local_glorious_ant)
