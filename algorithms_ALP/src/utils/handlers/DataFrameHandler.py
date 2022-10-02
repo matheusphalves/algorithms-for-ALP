@@ -45,7 +45,7 @@ class DataFrameHandler:
     def save_df_to_csv(data_frame, file_name, file_path=None):
 
         if file_path is None:
-            file_path = os.getcwd() + '/tmp/'
+            file_path = os.getcwd() + '\\tmp\\'
             try:
                 os.mkdir(file_path)
             except:

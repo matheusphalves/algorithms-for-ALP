@@ -74,6 +74,7 @@ class ACOSolver:
         self.runaway_indices = []
         self.aircraft_indices = []
         self.pheromone_matrix_history = {}  # save the pheromone matrix evolution
+        self.time_execution = 0
 
         # Response attributes
         self.local_glorious_ant: Ant = None  # Represents the best Ant from a Iteration
@@ -123,8 +124,6 @@ class ACOSolver:
         global_start = datetime.now()
         stop_iteration = 1
         for iteration in range(max_iterations):
-            #iter_start = datetime.now()
-            #print(f"Processing iteration {int(iteration + 1)} / {max_iterations} expected")
             for key_ant, ant in enumerate(self.colony):
                 while len(ant.aircraft_candidates_dict) > 0:
                     selected_runaway: Runaway = self.select_runaway(ant)
@@ -144,14 +143,15 @@ class ACOSolver:
             # self.local_glorious_ant = min(self.colony, key=lambda ant: ant.solution_cost)
             self.store_results()
 
-            print(f"{iteration + 1} Iteration cost: {self.local_glorious_ant.solution_cost}")
+            # print(f"{iteration + 1} Iteration cost: {self.local_glorious_ant.solution_cost}")
             # self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.iterations_costs[-1])
             self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.global_glorious_ant.solution_cost)
             self.release_the_krants(alp_instance)
             stop_iteration =iteration
 
         global_finish = datetime.now()
-        print(f"Finishing algorithm execution: ETA {global_finish - global_start} seconds")
+        self.time_execution = global_finish - global_start
+        print(f"Finishing algorithm execution: ETA {self.time_execution} seconds")
         print(f"Solution was given using {stop_iteration + 1} / {max_iterations} iterations")
         print(f"Last Cost solution: {self.local_glorious_ant.solution_cost}")
         print(f"Best solution: {self.global_glorious_ant.solution_cost}")
@@ -213,7 +213,7 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 0.2  # 0< q0 < 1 is a constant of the algorithm
+        q0 = 0.9  # 0< q0 < 1 is a constant of the algorithm
         q = random.uniform(0, 1)
         r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]
         if q < q0:
@@ -290,12 +290,12 @@ class ACOSolver:
         try:
             try:
                 numerator = (self.pheromone_matrix[runaway.index][aircraft.index] ** self.alpha) * \
-                            ant.heuristic_info[runaway.index][aircraft.index] ** self.beta
+                            ant.heuristic_info[runaway.index][aircraft.index] ** ((self.beta1 + self.beta2) /100)
                 denominator = 0
                 for key, aircraft_unvisited in ant.aircraft_candidates_dict.items():
                     #if aircraft.index != aircraft_unvisited.index:
                     denominator += self.pheromone_matrix[runaway.index][aircraft_unvisited.index]**self.alpha * \
-                                       ant.heuristic_info[runaway.index][aircraft_unvisited.index]**self.beta
+                                       ant.heuristic_info[runaway.index][aircraft_unvisited.index]**((self.beta1 + self.beta2) /100)
 
                 return numerator / denominator
 
@@ -339,6 +339,9 @@ class ACOSolver:
         self.pheromone_matrix_history[str(iter_number)] = np.array(self.pheromone_matrix)
         self.evaporate_pheromone()
         global_start = datetime.now()
+        #pheromone_rate = self.pheromone_rate
+        #if best_solution is False:
+        #    pheromone_rate = self.pheromone_rate*0.5
         for index, (runaway_index, runaway) in enumerate(self.local_glorious_ant.runaways_dict.items()):
             optimal_scheduled_sequence = [key for key, runaway in
                                           self.local_glorious_ant.runaways_dict[runaway_index].solution_dict.items()]
@@ -347,9 +350,13 @@ class ACOSolver:
                 path_weight = (len(optimal_scheduled_sequence) - air_index) * self.pheromone_rate * self.compute_pheromone_weight(air_index)  # importância da ordem
                 #path_weight = len(optimal_scheduled_sequence) - air_index
                 #delta_pheromone = (1 / (penality_cost_iter + 1)) * path_weight * self.pheromone_rate
-                delta_pheromone = (1 / (penality_cost_iter + 1)) * path_weight
+                # delta_pheromone = (1 / (penality_cost_iter + 1)) * path_weight
+                delta_pheromone = (path_weight / (penality_cost_iter + 1))
                 if best_solution:
                     self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone)
+                else:
+                    #self.pheromone_rate += self.pheromone_rate * 0.1
+                    self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone*0.9)
 
             x = 0
         x = 0
