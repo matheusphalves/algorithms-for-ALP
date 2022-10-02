@@ -21,6 +21,7 @@
 #  SOFTWARE.
 from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
 from algorithms_ALP.src.utils.math.GraphViewer import GraphViewer
+import matplotlib.pyplot as plt
 
 
 class ACOGraphViewer:
@@ -41,3 +42,11 @@ class ACOGraphViewer:
 
         for graph in self.graphs:
             graph.visualize_digraph()
+
+    def visualize_cost_evolution(self, iterations_list):
+        # iterations_numbers = [key + 1 for key, index in enumerate(iterations_list)]
+        # plt.plot(iterations_numbers, iterations_list)
+        # plt.ylabel('Cost')
+        # plt.xlabel('Iterations')
+        # plt.show()
+        pass

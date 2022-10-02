@@ -130,7 +130,7 @@ class ACOSolver:
                     selected_aircraft = self.select_aircraft(ant,
                                                              selected_runaway)
 
-                    priority = self.get_aircraft_priority(selected_aircraft.index, sel=8)
+                    priority = self.get_aircraft_priority(selected_aircraft.index, sel=1)
                     ant.update_heuristic_info(selected_runaway, self.beta1, self.beta2, priority)
                     # the landing time is assigned here as well
                     # Insert the aircraft j in the list of aircraft affected to the runway r and delete it from the candidate list
@@ -213,7 +213,8 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 0.9  # 0< q0 < 1 is a constant of the algorithm
+        q0 = 0.3  # 0< q0 < 1 is a constant of the algorithm
+        #q0 = random.uniform(0, 1)
         q = random.uniform(0, 1)
         r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]
         if q < q0:
@@ -411,6 +412,8 @@ class ACOSolver:
             return aircraft.target_landing_time / (aircraft.penality_cost_earliest + aircraft.penality_cost_latest)
         elif sel == 8:  # li / (Pbi + Pai)
             return aircraft.latest_landing_time / (aircraft.penality_cost_earliest + aircraft.penality_cost_latest)
+        elif sel == 9:
+            return 2*aircraft.target_landing_time / (aircraft.penality_cost_earliest + aircraft.penality_cost_latest)
 
     def store_results(self):
         self.local_glorious_ant = min(self.colony, key=lambda ant: ant.solution_cost)
