@@ -49,6 +49,7 @@ class GraphViewer:
         graph = nx.DiGraph()
         graph.add_weighted_edges_from(self.visual)
         nx.draw_networkx(graph)
+        plt.title("ACO - Path Direction")
         plt.show()
 
 # Example of usage

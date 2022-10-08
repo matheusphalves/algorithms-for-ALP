@@ -213,7 +213,7 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 0.3  # 0< q0 < 1 is a constant of the algorithm
+        q0 = 0.5  # 0< q0 < 1 is a constant of the algorithm
         #q0 = random.uniform(0, 1)
         q = random.uniform(0, 1)
         r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]

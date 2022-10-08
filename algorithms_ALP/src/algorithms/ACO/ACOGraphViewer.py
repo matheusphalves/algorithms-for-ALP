@@ -43,10 +43,12 @@ class ACOGraphViewer:
         for graph in self.graphs:
             graph.visualize_digraph()
 
-    def visualize_cost_evolution(self, iterations_list):
-        # iterations_numbers = [key + 1 for key, index in enumerate(iterations_list)]
-        # plt.plot(iterations_numbers, iterations_list)
-        # plt.ylabel('Cost')
-        # plt.xlabel('Iterations')
-        # plt.show()
+    def visualize_cost_evolution(self, iterations_list, aircraft_times):
+        iterations_numbers = [key + 1 for key, index in enumerate(iterations_list)]
+        plt.plot(iterations_numbers, iterations_list)
+        plt.title(f"ACO - Cost Evolution ({len(aircraft_times)} aircrafts)")
+        plt.ylabel('Cost')
+        plt.xlabel('Number of iterations')
+
+        plt.show()
         pass
