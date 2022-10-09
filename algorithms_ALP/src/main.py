@@ -49,11 +49,11 @@ def load_files(root_path, airland_range = [8,8]):
     return df_data_list
 
 if __name__ == '__main__':
-    # sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
-    sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
+    sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
+    # sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
 
 
-    df_data_list = load_files(sample_data_path, [1, 3])
+    df_data_list = load_files(sample_data_path, [1, 1])
 
 
     counter = 1

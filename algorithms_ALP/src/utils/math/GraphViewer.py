@@ -29,6 +29,7 @@ class GraphViewer:
         visual is a list which stores all the set of edges that constitutes a graph
         """
         self.visual = []
+        self.graph = None
 
     def add_weigthed_edge(self, a, b, weight=None):
         """
@@ -41,14 +42,14 @@ class GraphViewer:
         temp = [a, b, weight]
         self.visual.append(temp)
 
-    def visualize_digraph(self):
+    def visualize_digraph(self, pos):
         """
         In visualize function G is an object of. Creates and display a directed graph with a given list.
         :return:
         """
-        graph = nx.DiGraph()
-        graph.add_weighted_edges_from(self.visual)
-        nx.draw_networkx(graph)
+        self.graph = nx.DiGraph()
+        self.graph.add_weighted_edges_from(self.visual)
+        nx.draw_networkx(self.graph)
         plt.title("ACO - Path Direction")
         plt.show()
 
