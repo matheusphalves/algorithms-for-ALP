@@ -26,7 +26,7 @@ from matplotlib import pyplot as plt
 from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.algorithms.ACO.entity.Ant import Ant
 from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
-from algorithms_ALP.src.algorithms.ACO.entity.Runaway import Runaway
+from algorithms_ALP.src.algorithms.ACO.entity.Runway import Runway
 from algorithms_ALP.src.exceptions.OperationErrorException import OperationErrorException
 from algorithms_ALP.src.utils.math.MathUtils import MathUtils
 
@@ -97,8 +97,8 @@ class ACOSolver:
 
             # Create global runaway list
             for run_index in self.runaway_indices:
-                self.global_runaway_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
-                                                              solution_dict={})
+                self.global_runaway_dict[run_index] = Runway(run_index, runway_name=f'R{int(run_index)}',
+                                                             solution_dict={})
 
             # Create global aircraft candidate list with index
             for index_plane, airplane_data in alp_instance.aircraft_times.items():
@@ -126,7 +126,7 @@ class ACOSolver:
         for iteration in range(max_iterations):
             for key_ant, ant in enumerate(self.colony):
                 while len(ant.aircraft_candidates_dict) > 0:
-                    selected_runaway: Runaway = self.select_runaway(ant)
+                    selected_runaway: Runway = self.select_runaway(ant)
                     selected_aircraft = self.select_aircraft(ant,
                                                              selected_runaway)
 
@@ -135,7 +135,7 @@ class ACOSolver:
                     # the landing time is assigned here as well
                     # Insert the aircraft j in the list of aircraft affected to the runway r and delete it from the candidate list
                     ant.aircraft_candidates_dict.pop(selected_aircraft.index)
-                    ant_runaway: Runaway = ant.runaways_dict[selected_runaway.index]
+                    ant_runaway: Runway = ant.runaways_dict[selected_runaway.index]
                     ant_runaway.solution_dict[selected_aircraft.index] = selected_aircraft
                 # Return to the beginning of the graph
                 ant.compute_total_costs()
@@ -244,7 +244,7 @@ class ACOSolver:
     def bench_time(self, method_name, time):
         print(f"{method_name} time: {time}")
 
-    def select_aircraft(self, ant: Ant, runaway: Runaway):
+    def select_aircraft(self, ant: Ant, runaway: Runway):
         """
         After choosing a runway r, the ant has to choose an aircraft for this runway.
         :param ant: 
@@ -281,7 +281,7 @@ class ACOSolver:
 
         return aircraft.penality_cost_earliest * abs(deviation_time)
 
-    def compute_probability(self, ant: Ant, runaway: Runaway, aircraft: Aircraft):
+    def compute_probability(self, ant: Ant, runaway: Runway, aircraft: Aircraft):
         """
         Evaluate the probability rule to choose an aircraft to landing on selected runaway.
         :param aircraft:
@@ -308,7 +308,7 @@ class ACOSolver:
 
         return 0
 
-    def assign_landing_time_to_aircraft(self, ant: Ant, selected_runaway: Runaway, selected_aircraft: Aircraft):
+    def assign_landing_time_to_aircraft(self, ant: Ant, selected_runaway: Runway, selected_aircraft: Aircraft):
         """
         This step is to assign landing times to aircraft while respecting the two constraints:
             − The landing time must be within the landing widow [ei, li]

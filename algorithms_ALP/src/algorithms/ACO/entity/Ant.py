@@ -23,7 +23,7 @@ from collections import OrderedDict
 
 from algorithms_ALP.src.algorithms.ACO.ALPInstance import ALPInstance
 from algorithms_ALP.src.algorithms.ACO.entity.Aircraft import Aircraft
-from algorithms_ALP.src.algorithms.ACO.entity.Runaway import Runaway
+from algorithms_ALP.src.algorithms.ACO.entity.Runway import Runway
 from algorithms_ALP.src.utils.math.MathUtils import MathUtils
 import numpy as np
 
@@ -49,8 +49,8 @@ class Ant:
     def initialize_parameters(self, alp_instance: ALPInstance, runaway_indices, aircraft_indices):
         # Create global runaway list
         for run_index in runaway_indices:
-            self.runaways_dict[run_index] = Runaway(run_index, runaway_name=f'R{int(run_index)}',
-                                                    solution_dict=OrderedDict())
+            self.runaways_dict[run_index] = Runway(run_index, runway_name=f'R{int(run_index)}',
+                                                   solution_dict=OrderedDict())
 
         # Create heuristic info
         matrix_dimension = len(runaway_indices) + len(alp_instance.aircraft_times) + 2
@@ -66,11 +66,11 @@ class Ant:
         solution_cost = 0
         for key, runaway in self.runaways_dict.items():
             runaway.compute_landing_costs()
-            solution_cost += runaway.runaway_cost
+            solution_cost += runaway.runway_cost
         self.solution_cost = solution_cost  # avoid multiple sums
         return self.solution_cost
 
-    def update_heuristic_info(self, runaway: Runaway, beta1, beta2, priority = 0):
+    def update_heuristic_info(self, runaway: Runway, beta1, beta2, priority = 0):
         """
         A weighting of these two parameters (Priority(i) and penalty_cost(i)) corresponds to the heuristic information.
         :param runaway:
