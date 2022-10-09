@@ -32,7 +32,7 @@ class ACOGraphViewer:
     def __init__(self):
         self.graphs = []
 
-    def visualize_best_solution(self, glorious_ant: Ant):
+    def visualize_best_solution(self, glorious_ant: Ant, instance_name):
         for run_index, (runaway_index, runaway) in enumerate(glorious_ant.runaways_dict.items()):
             aco_graph = GraphViewer()
             solution_list = [aircraft_index for air_index, (aircraft_index, aircraft) in enumerate(runaway.solution_dict.items())]
@@ -41,15 +41,16 @@ class ACOGraphViewer:
             for node in grouped_sol_list:
                 aco_graph.add_weigthed_edge(f'A{node[0]-2}', f'A{node[1]-2}')
 
-            self.set_layout_postions(aco_graph, solution_list)
+            self.set_layout_postions(aco_graph, solution_list, instance_name)
             self.graphs.append(aco_graph)
 
         for graph in self.graphs:
             #graph.visualize_digraph()
-            self.visualize_digraph_alp_layout(graph)
+            #self.visualize_digraph_alp_layout(graph)
+            pass
 
 
-    def set_layout_postions(self, graph, solution_list, max_column_group = 3):
+    def set_layout_postions(self, graph, solution_list, instance_name, max_column_group = 3):
         graph.graph = nx.DiGraph()
         graph.graph.add_weighted_edges_from(graph.visual)
         nodes = list(graph.graph.nodes)
@@ -67,7 +68,7 @@ class ACOGraphViewer:
                 row_counter +=1
                 column_counter = 1
         nx.draw_networkx(graph.graph, pos)
-        plt.title(f"ACO - Scheduled sequence ({(len(solution_list))} aircrafts)")
+        plt.title(f"ACO - Scheduled sequence {instance_name}\nrunway {nodes[0]} - ({(len(solution_list))} aircrafts)")
         plt.show()
         x = 0
 
@@ -87,10 +88,10 @@ class ACOGraphViewer:
         nx.draw_networkx(graph.graph)
         plt.show()
 
-    def visualize_cost_evolution(self, iterations_list, aircraft_times):
+    def visualize_cost_evolution(self, iterations_list, aircraft_times, instance_name):
         iterations_numbers = [key + 1 for key, index in enumerate(iterations_list)]
         plt.plot(iterations_numbers, iterations_list)
-        plt.title(f"ACO - Cost Evolution ({len(aircraft_times)} aircrafts)")
+        plt.title(f"ACO - Cost Evolution ({instance_name})\n({len(aircraft_times)} aircrafts)")
         plt.ylabel('Cost')
         plt.xlabel('Number of iterations')
 
