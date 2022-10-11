@@ -213,7 +213,7 @@ class ACOSolver:
         For ant k, there is a probability rule to select a runway r, from node D.
         :return: Runaway
         """
-        q0 = 0.6  # 0< q0 < 1 is a constant of the algorithm
+        q0 = 0.5  # 0< q0 < 1 is a constant of the algorithm
         #q0 = random.uniform(0, 1)
         q = random.uniform(0, 1)
         r0 = self.global_runaway_dict[random.choice(self.runaway_indices)]
@@ -382,9 +382,9 @@ class ACOSolver:
 
     def compute_pheromone_weight(self, x):
         # h(x)=-(sqrt(x)+30)+40
-        R = 5
-        C = 3.3
-        V = 100
+        R = self.alpha
+        C = (self.beta1 + self.beta2)
+        V = len(self.colony)
         return V*math.exp(-x/(R*C))
 
     def ant_contains_node(self, ant: Ant, runaway_index, aircraft_index):
