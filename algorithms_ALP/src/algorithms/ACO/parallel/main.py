@@ -25,7 +25,7 @@ from algorithms_ALP.src.algorithms.ACO.parallel.ACOParallelSolver import ACOPara
 from algorithms_ALP.src.utils.handlers.DataFrameHandler import DataFrameHandler
 
 
-def load_files(root_path, airland_range = [1,1]):
+def load_files(root_path, airland_range = [2,2]):
     df_data_list = []
     try:
         for airland in range(airland_range[0], airland_range[1]+1):
@@ -36,11 +36,11 @@ def load_files(root_path, airland_range = [1,1]):
     return df_data_list
 
 if __name__ == '__main__':
-    sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
-    # sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
+    # sample_data_path = 'C:\\Users\\Matheus Phelipe\\Desktop\\workspace\\algorithms-for-ALP\\algorithms_ALP\\src\\sample_data\\or_library'
+    sample_data_path = 'C:\\Users\\mathe\\Desktop\\workspace\\algorithms-aircraft-landing-problems\\algorithms_ALP\\src\\sample_data\\or_library'
 
 
-    df_data_list = load_files(sample_data_path, [1, 1])
+    df_data_list = load_files(sample_data_path, [8, 8])
 
 
     counter = 1

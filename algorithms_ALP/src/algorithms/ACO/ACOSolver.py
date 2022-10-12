@@ -130,7 +130,7 @@ class ACOSolver:
                     selected_aircraft = self.select_aircraft(ant,
                                                              selected_runaway)
 
-                    priority = self.get_aircraft_priority(selected_aircraft.index, sel=1)
+                    priority = self.get_aircraft_priority(selected_aircraft.index, sel=9)
                     ant.update_heuristic_info(selected_runaway, self.beta1, self.beta2, priority)
                     # the landing time is assigned here as well
                     # Insert the aircraft j in the list of aircraft affected to the runway r and delete it from the candidate list
@@ -145,7 +145,8 @@ class ACOSolver:
 
             # print(f"{iteration + 1} Iteration cost: {self.local_glorious_ant.solution_cost}")
             # self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.iterations_costs[-1])
-            self.update_pheromone_trail(iteration, best_solution=self.local_glorious_ant.solution_cost <= self.global_glorious_ant.solution_cost)
+            best_solution = self.local_glorious_ant.solution_cost <= self.global_glorious_ant.solution_cost
+            self.update_pheromone_trail(iteration, best_solution=best_solution)
             self.release_the_krants(alp_instance)
             stop_iteration =iteration
 
@@ -357,10 +358,7 @@ class ACOSolver:
                     self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone)
                 else:
                     #self.pheromone_rate += self.pheromone_rate * 0.1
-                    self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone*0.9)
-
-            x = 0
-        x = 0
+                    self.increase_pheromone(runaway_index, aircraft_index, delta_pheromone*0.5)
 
 
     def evaporate_pheromone(self):
@@ -421,4 +419,5 @@ class ACOSolver:
             self.global_glorious_ant = self.local_glorious_ant
         elif self.local_glorious_ant.solution_cost < self.global_glorious_ant.solution_cost:
             self.global_glorious_ant = self.local_glorious_ant
-            self.iterations_costs.append(self.local_glorious_ant.solution_cost)
+
+        self.iterations_costs.append(self.local_glorious_ant.solution_cost)

@@ -88,12 +88,12 @@ class ACOGraphViewer:
         nx.draw_networkx(graph.graph)
         plt.show()
 
-    def visualize_cost_evolution(self, iterations_list, aircraft_times, instance_name):
+    def visualize_cost_evolution(self, iterations_list, instance_name):
         iterations_numbers = [key + 1 for key, index in enumerate(iterations_list)]
         plt.plot(iterations_numbers, iterations_list)
-        plt.title(f"ACO - Cost Evolution ({instance_name})\n({len(aircraft_times)} aircrafts)")
-        plt.ylabel('Cost')
-        plt.xlabel('Number of iterations')
+        plt.title(f"ACO - Evolução do custo por iteração\n ({instance_name})")
+        plt.ylabel('Custo')
+        plt.xlabel('Iterações')
 
         plt.show()
         pass
