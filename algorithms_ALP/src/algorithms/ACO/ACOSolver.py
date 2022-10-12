@@ -81,7 +81,7 @@ class ACOSolver:
         self.global_glorious_ant: Ant = None  # Represents the best Ant during all iterations
         self.iterations_costs = []
 
-    def __initialize(self, alp_instance: ALPInstance = None):
+    def initialize(self, alp_instance: ALPInstance = None):
         """
         Initialize internal parameters of ACO.
         :param alp_instance:
@@ -120,7 +120,7 @@ class ACOSolver:
             raise OperationErrorException(f"Error during initialization step: \n {str(ex)}")
 
     def start(self, alp_instance: ALPInstance, max_iterations=100):
-        self.__initialize(alp_instance)
+        self.initialize(alp_instance)
         global_start = datetime.now()
         stop_iteration = 1
         for iteration in range(max_iterations):
@@ -421,5 +421,4 @@ class ACOSolver:
             self.global_glorious_ant = self.local_glorious_ant
         elif self.local_glorious_ant.solution_cost < self.global_glorious_ant.solution_cost:
             self.global_glorious_ant = self.local_glorious_ant
-
-        self.iterations_costs.append(self.local_glorious_ant.solution_cost)
+            self.iterations_costs.append(self.local_glorious_ant.solution_cost)
