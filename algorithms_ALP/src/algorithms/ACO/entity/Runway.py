@@ -22,7 +22,7 @@
 #  SOFTWARE.
 #  """
 
-class Runaway:
+class Runway:
     """
     Example of an Runaway (used by runaway list)
     runaway_name    airplane_index:landing_time
@@ -30,16 +30,16 @@ class Runaway:
     Runway 2        2:108 3:184 6:300 8:655
     Runway 3        7:54 10:407 9:520 –
     """
-    def __init__(self, index, runaway_name, solution_dict={}):
+    def __init__(self, index, runway_name, solution_dict={}):
         """
         :param index: Index of Runaway
-        :param runaway_name: Just an alias for the Runaway
+        :param runway_name: Just an alias for the Runaway
         :param solution_dict: List of selected Aircraft (with landing time assigned)
         """
         self.index = index
-        self.runaway_name = runaway_name
+        self.runway_name = runway_name
         self.solution_dict = solution_dict
-        self.runaway_cost = 0
+        self.runway_cost = 0
 
 
     def compute_landing_costs(self):
@@ -50,4 +50,4 @@ class Runaway:
         runaway_cost = 0
         for key, aircraft in self.solution_dict.items():
             runaway_cost += aircraft.penality_cost_computed
-        self.runaway_cost = runaway_cost # avoid multiple sums
+        self.runway_cost = runaway_cost # avoid multiple sums
